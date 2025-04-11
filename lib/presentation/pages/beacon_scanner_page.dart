@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:smart_lock/presentation/pages/face_scan_page.dart';
+
+import 'scan_screen.dart';
 
 class BeaconScannerPage extends StatefulWidget {
   const BeaconScannerPage({super.key});
@@ -21,8 +22,8 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
 
   // Target beacon information - your friend's beacon
   static const String TARGET_UUID = "0000abcd-1000-8000-00805f9b34fb";
-  static const int TARGET_MAJOR = 100;
-  static const int TARGET_MINOR = 1;
+  //static const int TARGET_MAJOR = 100;
+  //static const int TARGET_MINOR = 1;
 
   @override
   void initState() {
@@ -151,7 +152,9 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => FaceScanScreen(device: device),
+          builder: (_) => FaceScan(
+            lockUuid: "0000abcd-0000-1000-8000-00805f9b34fb",
+          ),
         ),
       );
     });
