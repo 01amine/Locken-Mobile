@@ -72,21 +72,19 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
       _errorText = "";
     });
 
-    // Scan for the target device
+    bool beaconFound = false;
+
     _scanSubscription = _ble.scanForDevices(
-      withServices: [], // Scan all devices to make sure we find the beacon
+      withServices: [],
       scanMode: ScanMode.lowLatency,
     ).listen(
       (device) {
-        // Log device for debugging
         print("Device: ${device.id} (${device.name}) RSSI: ${device.rssi}");
 
-        // Check all possible ways this could be our target beacon
         if (isTargetBeacon(device)) {
+          beaconFound = true;
           print("TARGET FOUND: ${device.id}");
           _stopScan();
-
-          // Auto-connect and navigate to face scan page
           _connectToBeacon(device);
         }
       },
@@ -98,11 +96,23 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
       },
     );
 
-    // Auto-restart scan every 30 seconds if no target found
-    Future.delayed(const Duration(seconds: 30), () {
-      if (_isScanning) {
+    // If no beacon is found in 15 seconds, navigate to face scan screen
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!beaconFound && mounted) {
         _stopScan();
-        _startScan(); // Restart the scan
+        setState(() {
+          _statusText = "Lock 1";
+        });
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const FaceScan(
+                lockUuid: "0000abcd-0000-1000-8000-00805f9b34fb",
+              ),
+            ),
+          );
+        });
       }
     });
   }
@@ -228,7 +238,7 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.bluetooth_searching,
+                                Icons.lock_outline_rounded,
                                 size: 50,
                                 color: Colors.blue,
                               ),
@@ -246,7 +256,7 @@ class _BeaconScannerPageState extends State<BeaconScannerPage> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.bluetooth,
+                        Icons.lock_outline,
                         size: 50,
                         color: Colors.grey,
                       ),

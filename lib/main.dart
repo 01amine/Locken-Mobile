@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:smart_lock/presentation/pages/beacon_scanner_page.dart';
-import 'package:smart_lock/presentation/pages/scan_screen.dart';
+import 'package:smart_lock/presentation/pages/beacon_scanner_page.dart';
 
 void main() {
   runApp(MyBeaconApp());
@@ -12,10 +11,6 @@ class MyBeaconApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: FaceScan(
-        lockUuid: "0000abcd-0000-1000-8000-00805f9b34fb",
-      ),
-    );
+        debugShowCheckedModeBanner: false, home: BeaconScannerPage());
   }
 }

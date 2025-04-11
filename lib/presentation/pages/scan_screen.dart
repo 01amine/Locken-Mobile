@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_lock/presentation/pages/beacon_scanner_page.dart';
 
 import '../../data/face_scan_repo_impl.dart';
 import '../../domain/face_scan_usecase.dart';
@@ -15,14 +16,14 @@ class FaceScan extends StatefulWidget {
   State<FaceScan> createState() => _FaceScanState();
 }
 
-class _FaceScanState extends State<FaceScan>
-    with SingleTickerProviderStateMixin {
+class _FaceScanState extends State<FaceScan> with TickerProviderStateMixin {
   late CameraController _cameraController;
   Future<void>? _initializeControllerFuture;
   bool _isCameraInitialized = false;
   bool _isLoading = false;
   bool _isScanning = false;
   bool _showLockAnimation = false;
+  bool _showAccessDenied = false; // New flag for access denied state
   String _status = 'Position your face within the frame';
 
   // Animation controllers
@@ -48,6 +49,20 @@ class _FaceScanState extends State<FaceScan>
     ),
   );
 
+  // Access denied animation controller
+  late final AnimationController _accessDeniedController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1500),
+  );
+
+  late final Animation<double> _accessDeniedAnimation =
+      Tween<double>(begin: 0.0, end: 1.0).animate(
+    CurvedAnimation(
+      parent: _accessDeniedController,
+      curve: Curves.easeInOut,
+    ),
+  );
+
   late final FaceScanUseCase _faceScanUseCase;
 
   @override
@@ -65,9 +80,23 @@ class _FaceScanState extends State<FaceScan>
     // Add listener for lock animation completion
     _lockAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // Wait a moment before navigating back
+        // Wait a moment before navigating to BeaconScanScreen
         Future.delayed(const Duration(milliseconds: 500), () {
-          Navigator.of(context).pop(true); // Return true to indicate success
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const BeaconScannerPage()),
+          );
+        });
+      }
+    });
+
+    // Add listener for access denied animation completion
+    _accessDeniedController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        // Wait a moment before navigating to BeaconScanScreen
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const BeaconScannerPage()),
+          );
         });
       }
     });
@@ -120,14 +149,32 @@ class _FaceScanState extends State<FaceScan>
       // Process the captured image.
       await _faceScanUseCase.scanAndSendFace(widget.lockUuid, image.path);
 
-      setState(() {
-        _status = 'Face scan successful!';
-        _isLoading = false;
-        _showLockAnimation = true;
-      });
+      // Check if we need to simulate a 300 status response
+      // In a real implementation, you would get this from the API response
+      // For now, we'll use a mock approach to determine access status
+      bool hasAccess = await _checkAccessStatus(widget.lockUuid);
 
-      // Start the lock opening animation
-      _lockAnimationController.forward();
+      if (!hasAccess) {
+        // Simulate 300 status code
+        setState(() {
+          _status =
+              'Access denied. You do not have permission to open this lock.';
+          _isLoading = false;
+          _showAccessDenied = true;
+        });
+
+        // Start the access denied animation
+        _accessDeniedController.forward();
+      } else {
+        setState(() {
+          _status = 'Face scan successful!';
+          _isLoading = false;
+          _showLockAnimation = true;
+        });
+
+        // Start the lock opening animation
+        _lockAnimationController.forward();
+      }
     } catch (e) {
       setState(() {
         _status = 'Face scan failed: $e';
@@ -138,10 +185,19 @@ class _FaceScanState extends State<FaceScan>
     }
   }
 
+  // Mock method to check if user has access
+  // In real implementation, this would extract status from API response
+  Future<bool> _checkAccessStatus(String lockUuid) async {
+    // This is a mock implementation - replace with actual logic
+    // If lockUuid ends with '300', simulate no access
+    return !lockUuid.endsWith('300');
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
     _lockAnimationController.dispose();
+    _accessDeniedController.dispose();
     _cameraController.dispose();
     super.dispose();
   }
@@ -229,7 +285,11 @@ class _FaceScanState extends State<FaceScan>
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text(_status, style: const TextStyle(fontSize: 18)),
+                      Text(
+                        _status,
+                        style: const TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 20),
                       _isLoading || _isScanning
                           ? Column(
@@ -241,7 +301,7 @@ class _FaceScanState extends State<FaceScan>
                                     : const Text("Processing..."),
                               ],
                             )
-                          : _showLockAnimation
+                          : _showLockAnimation || _showAccessDenied
                               ? const SizedBox() // Hide button during animation
                               : ElevatedButton(
                                   onPressed: _captureFace,
@@ -275,6 +335,23 @@ class _FaceScanState extends State<FaceScan>
                   height: double.infinity,
                   child: Center(
                     child: LockAnimation(animation: _lockAnimation),
+                  ),
+                );
+              },
+            ),
+
+          // Access Denied overlay
+          if (_showAccessDenied)
+            AnimatedBuilder(
+              animation: _accessDeniedAnimation,
+              builder: (context, child) {
+                return Container(
+                  color: Colors.black.withOpacity(0.7),
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Center(
+                    child: AccessDeniedAnimation(
+                        animation: _accessDeniedAnimation),
                   ),
                 );
               },
@@ -494,7 +571,7 @@ class LockShacklePainter extends CustomPainter {
       ..strokeWidth = size.width * 0.15
       ..strokeCap = StrokeCap.round;
 
-    //final centerX = size.width / 2;
+    final centerX = size.width / 2;
 
     // Calculate opening angle (0 to 90 degrees)
     final angle = (animationValue * 90) * (3.14159 / 180); // Convert to radians
@@ -543,5 +620,114 @@ class LockShacklePainter extends CustomPainter {
   @override
   bool shouldRepaint(LockShacklePainter oldDelegate) {
     return oldDelegate.animationValue != animationValue;
+  }
+}
+
+// Access Denied animation widget
+class AccessDeniedAnimation extends StatelessWidget {
+  final Animation<double> animation;
+
+  const AccessDeniedAnimation({
+    super.key,
+    required this.animation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size.width * 0.4;
+
+    return SizedBox(
+      width: size,
+      height: size * 1.3,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Lock body
+          Positioned(
+            bottom: 0,
+            child: Container(
+              width: size * 0.8,
+              height: size * 0.8,
+              decoration: BoxDecoration(
+                color: Colors.red.shade700,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.shade200.withOpacity(0.5),
+                    blurRadius: 15,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.lock,
+                  color: Colors.white,
+                  size: size * 0.4,
+                ),
+              ),
+            ),
+          ),
+
+          // Lock shackle (the U-shaped part - doesn't move for denied access)
+          Positioned(
+            top: 0,
+            child: CustomPaint(
+              size: Size(size * 0.6, size * 0.6),
+              painter: LockShacklePainter(
+                0.0, // Animation value 0 means lock stays closed
+                Colors.red.shade700,
+              ),
+            ),
+          ),
+
+          // Access denied X mark
+          Opacity(
+            opacity: animation.value > 0.5 ? (animation.value - 0.5) * 2.0 : 0,
+            child: Container(
+              width: size * 1.5,
+              height: size * 1.5,
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.close,
+                color: Colors.red.shade300,
+                size: size * 1.0,
+              ),
+            ),
+          ),
+
+          // Text showing access denied
+          Positioned(
+            bottom: -size * 0.5,
+            child: Opacity(
+              opacity: animation.value,
+              child: Column(
+                children: [
+                  Text(
+                    "Access Denied",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "You don't have permission",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
