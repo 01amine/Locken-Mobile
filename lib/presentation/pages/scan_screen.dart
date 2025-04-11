@@ -2,10 +2,13 @@ import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_lock/home/screens/home_screen.dart';
 import 'package:smart_lock/presentation/pages/beacon_scanner_page.dart';
 
 import '../../data/face_scan_repo_impl.dart';
 import '../../domain/face_scan_usecase.dart';
+import '../../home/cubit/bottom_navigation_cubit.dart';
 
 class FaceScan extends StatefulWidget {
   final String lockUuid;
@@ -83,7 +86,10 @@ class _FaceScanState extends State<FaceScan> with TickerProviderStateMixin {
         // Wait a moment before navigating to BeaconScanScreen
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const BeaconScannerPage()),
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                  create: (_) => BottomNavigationCubit(), child: HomeScreen()),
+            ),
           );
         });
       }
