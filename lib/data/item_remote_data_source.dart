@@ -8,7 +8,8 @@ class ItemRemoteDataSource {
   ItemRemoteDataSource({required this.client});
 
   Future<ItemModel> getItemById(String itemId) async {
-    final url = Uri.parse('https://yourapi.com/items/$itemId');
+    final url =
+        Uri.parse('https://43c4-41-111-161-92.ngrok-free.app/items/$itemId');
     final response = await client.get(url);
 
     if (response.statusCode == 200) {
