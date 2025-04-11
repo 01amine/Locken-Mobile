@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../../data/log_entry_model.dart';
 class SecurityLogsScreen extends StatefulWidget {
   const SecurityLogsScreen({super.key});
 
@@ -22,7 +24,6 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
     'Allowed Items',
   ];
 
-  // Fake log data
   final List<LogEntry> logs = [
     LogEntry(
       severity: Severity.medium,
@@ -234,9 +235,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
         borderColor = Colors.yellow;
       case Severity.low:
         borderColor = Colors.green.shade400;
-      default:
-        borderColor = Colors.blue;
-    }
+      }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -380,23 +379,3 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
   }
 }
 
-// Models
-enum Severity { critical, high, medium, low }
-
-enum LogStatus { flagged, allowed, blocked, investigating, resolved }
-
-class LogEntry {
-  final Severity severity;
-  final String description;
-  final String source;
-  final DateTime timestamp;
-  final LogStatus status;
-
-  LogEntry({
-    required this.severity,
-    required this.description,
-    required this.source,
-    required this.timestamp,
-    required this.status,
-  });
-}

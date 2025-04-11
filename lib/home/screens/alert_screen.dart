@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../../data/alert_model.dart';
 class SecurityDashboard extends StatefulWidget {
   const SecurityDashboard({super.key});
 
@@ -9,8 +11,6 @@ class SecurityDashboard extends StatefulWidget {
 
 class _SecurityDashboardState extends State<SecurityDashboard> {
   bool isLive = true;
-
-  // Fake threat data
   final List<ThreatModel> threats = [
     ThreatModel(
       alertLevel: AlertLevel.high,
@@ -380,23 +380,3 @@ class _SecurityDashboardState extends State<SecurityDashboard> {
   }
 }
 
-// Models
-enum AlertLevel { critical, high, medium }
-
-enum ThreatStatus { blocked, monitoring, investigating }
-
-class ThreatModel {
-  final AlertLevel alertLevel;
-  final String description;
-  final String source;
-  final DateTime timestamp;
-  final ThreatStatus status;
-
-  ThreatModel({
-    required this.alertLevel,
-    required this.description,
-    required this.source,
-    required this.timestamp,
-    required this.status,
-  });
-}

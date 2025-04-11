@@ -577,7 +577,7 @@ class LockShacklePainter extends CustomPainter {
       ..strokeWidth = size.width * 0.15
       ..strokeCap = StrokeCap.round;
 
-    final centerX = size.width / 2;
+    //final centerX = size.width / 2;
 
     // Calculate opening angle (0 to 90 degrees)
     final angle = (animationValue * 90) * (3.14159 / 180); // Convert to radians
