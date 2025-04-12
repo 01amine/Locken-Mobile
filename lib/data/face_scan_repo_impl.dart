@@ -5,7 +5,7 @@ import '../domain/face_scan_repository.dart';
 
 class FaceScanRepositoryImpl implements FaceScanRepository {
   final String backendUrl =
-      "https://43c4-41-111-161-92.ngrok-free.app/recognize-face/1";
+      "https://c655-41-111-161-87.ngrok-free.app/recognize-face/4-tdtdtrdr-4";
 
   @override
   Future<void> sendFaceImage(String lockUuid, String imagePath) async {

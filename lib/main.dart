@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_lock/home/screens/home_screen.dart';
-import 'package:smart_lock/presentation/pages/beacon_scanner_page.dart';
 
 import 'home/cubit/bottom_navigation_cubit.dart';
 
